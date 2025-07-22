@@ -138,14 +138,12 @@ CREATE TABLE IF NOT EXISTS public.habit_completions (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     habit_id UUID REFERENCES public.user_habits(id) ON DELETE CASCADE NOT NULL,
     completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    completion_date DATE DEFAULT CURRENT_DATE,
     duration_minutes INTEGER,
     notes TEXT,
-    points_earned INTEGER DEFAULT 0
+    points_earned INTEGER DEFAULT 0,
+    UNIQUE(user_id, habit_id, completion_date)
 );
-
--- Criar índice único para garantir apenas um completamento por hábito por dia
-CREATE UNIQUE INDEX IF NOT EXISTS idx_habit_completions_unique_daily 
-    ON public.habit_completions (user_id, habit_id, DATE(completed_at));
 
 -- Inserir categorias padrão de hábitos
 INSERT INTO public.habit_categories (name, description, icon, color) VALUES
@@ -278,6 +276,20 @@ CREATE TRIGGER handle_updated_at_user_gamification
 CREATE TRIGGER handle_updated_at_user_routines
     BEFORE UPDATE ON public.user_routines
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+-- Função para definir completion_date automaticamente
+CREATE OR REPLACE FUNCTION public.handle_completion_date()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.completion_date = DATE(NEW.completed_at);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para definir completion_date automaticamente
+CREATE TRIGGER handle_completion_date_habit_completions
+    BEFORE INSERT OR UPDATE ON public.habit_completions
+    FOR EACH ROW EXECUTE FUNCTION public.handle_completion_date();
 
 -- Comentários nas tabelas
 COMMENT ON TABLE public.profiles IS 'Perfis dos usuários com informações pessoais';
