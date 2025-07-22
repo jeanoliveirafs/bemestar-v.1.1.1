@@ -115,11 +115,11 @@ git push -u origin main
 2. Adicione as seguintes variáveis:
 
 ```
-VITE_SUPABASE_URL = https://xxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-VITE_OPENAI_API_KEY = sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-VITE_APP_NAME = Refúgio Digital
-VITE_APP_URL = https://refugio-digital.vercel.app
+VITE_SUPABASE_URL = https://yeizisgimwwwvestmhnj.supabase.co
+VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllaXppc2dpbXd3d3Zlc3RtaG5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NjExMTUsImV4cCI6MjA2ODUzNzExNX0.GexbZxkm0BqPUlZ9cgH5j-hvzbgF-kx9mr3aiDTqVvA
+VITE_OPENAI_API_KEY = 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
+VITE_APP_NAME = appbemestarnovo
+VITE_APP_URL = https://appbemestarnovo.vercel.app
 ```
 
 3. Clique em **"Deploy"**
