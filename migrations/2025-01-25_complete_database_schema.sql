@@ -138,10 +138,11 @@ CREATE TABLE IF NOT EXISTS public.habit_completions (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     habit_id UUID REFERENCES public.user_habits(id) ON DELETE CASCADE NOT NULL,
     completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    completion_date DATE GENERATED ALWAYS AS (DATE(completed_at)) STORED,
     duration_minutes INTEGER,
     notes TEXT,
     points_earned INTEGER DEFAULT 0,
-    UNIQUE(user_id, habit_id, DATE(completed_at))
+    UNIQUE(user_id, habit_id, completion_date)
 );
 
 -- Inserir categorias padrão de hábitos
