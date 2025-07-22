@@ -8,45 +8,42 @@ import {
 interface LayoutProps {
   children: React.ReactNode;
   currentPage: string;
-  onNavigate: (page: string) => void;
+  onPageChange: (page: string) => void;
+  onLogout: () => void;
+  user: any;
+  isDarkMode: boolean;
+  onToggleTheme: () => void;
 }
 
 /**
  * Layout principal do aplicativo com menu de navegação
  * @param props - Propriedades incluindo conteúdo, página atual e função de navegação
  */
-export default function Layout({ children, currentPage, onNavigate }: LayoutProps) {
+export default function Layout({ children, currentPage, onPageChange, onLogout, user, isDarkMode, onToggleTheme }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Configuração dos itens do menu
   const menuItems = [
-    { id: 'home', name: 'Início', icon: Home },
-    { id: 'painel', name: 'Painel', icon: BarChart3 },
-    { id: 'autoavaliacoes', name: 'Autoavaliações', icon: Brain },
-    { id: 'emergencia', name: 'Emergência', icon: Shield },
-    { id: 'habitos', name: 'Hábitos', icon: Award },
-    { id: 'rotina', name: 'Rotina', icon: Bell },
-    { id: 'comunidade', name: 'Comunidade', icon: Users },
-    { id: 'conteudo-ia', name: 'Conteúdo IA', icon: Sparkles },
-    { id: 'relatorios', name: 'Relatórios', icon: PieChart },
-    { id: 'mindfulness', name: 'Mindfulness', icon: Music }
+    { id: 'dashboard', name: 'Dashboard', icon: BarChart3 },
+    { id: 'habits', name: 'Hábitos', icon: Award },
+    { id: 'routines', name: 'Rotinas', icon: Bell },
+    { id: 'emotions', name: 'Emoções', icon: Users },
+    { id: 'scales', name: 'Autoavaliações', icon: Brain },
+    { id: 'ai-content', name: 'Conteúdo IA', icon: Sparkles },
+    { id: 'crisis-plan', name: 'Emergência', icon: Shield },
+    { id: 'mindfulness', name: 'Mindfulness', icon: Music },
+    { id: 'progress', name: 'Relatórios', icon: PieChart },
+    { id: 'sos', name: 'SOS', icon: Shield }
   ];
 
-  /**
-   * Alterna o tema entre claro e escuro
-   */
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
-  };
+
 
   /**
    * Navega para uma página e fecha o menu mobile
    * @param pageId - ID da página para navegar
    */
   const handleNavigation = (pageId: string) => {
-    onNavigate(pageId);
+    onPageChange(pageId);
     setIsMobileMenuOpen(false);
   };
 
@@ -92,14 +89,14 @@ export default function Layout({ children, currentPage, onNavigate }: LayoutProp
                 <User className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-slate-800 dark:text-white">Jean Oliveira</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Usuário Premium</p>
-              </div>
+                  <p className="text-sm font-medium text-slate-800 dark:text-white">{user?.email || 'Usuário'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Usuário Premium</p>
+                </div>
             </div>
             
             <div className="flex space-x-2">
               <button
-                onClick={toggleDarkMode}
+                onClick={onToggleTheme}
                 className="flex-1 flex items-center justify-center px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
               >
                 {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -107,7 +104,10 @@ export default function Layout({ children, currentPage, onNavigate }: LayoutProp
               <button className="flex-1 flex items-center justify-center px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
                 <Settings className="w-4 h-4" />
               </button>
-              <button className="flex-1 flex items-center justify-center px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+              <button 
+                onClick={onLogout}
+                className="flex-1 flex items-center justify-center px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              >
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
@@ -166,14 +166,14 @@ export default function Layout({ children, currentPage, onNavigate }: LayoutProp
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-800 dark:text-white">Jean Oliveira</p>
+                  <p className="text-sm font-medium text-slate-800 dark:text-white">{user?.email || 'Usuário'}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Usuário Premium</p>
                 </div>
               </div>
               
               <div className="space-y-2">
                 <button
-                  onClick={toggleDarkMode}
+                  onClick={onToggleTheme}
                   className="w-full flex items-center px-4 py-3 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
                 >
                   {isDarkMode ? <Sun className="w-5 h-5 mr-3" /> : <Moon className="w-5 h-5 mr-3" />}
@@ -183,7 +183,10 @@ export default function Layout({ children, currentPage, onNavigate }: LayoutProp
                   <Settings className="w-5 h-5 mr-3" />
                   Configurações
                 </button>
-                <button className="w-full flex items-center px-4 py-3 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors">
+                <button 
+                  onClick={onLogout}
+                  className="w-full flex items-center px-4 py-3 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+                >
                   <LogOut className="w-5 h-5 mr-3" />
                   Sair
                 </button>
