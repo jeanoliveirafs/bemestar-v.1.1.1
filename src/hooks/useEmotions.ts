@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabaseClient } from '../services/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './useAuth';
 
 export interface EmotionPost {
@@ -110,7 +110,7 @@ export function useEmotions() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('emocao_posts')
         .insert({
           ...postData,
@@ -159,7 +159,7 @@ export function useEmotions() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase
         .from('emocao_posts')
         .delete()
         .eq('id', postId)

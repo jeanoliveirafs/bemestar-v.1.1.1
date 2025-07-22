@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabaseClient } from '../services/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './useAuth';
 
 export interface Habit {
@@ -43,7 +43,7 @@ export function useHabits() {
 
     try {
       setLoading(true);
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('habitos')
         .select('*')
         .eq('user_id', user.id)
@@ -65,7 +65,7 @@ export function useHabits() {
 
     try {
       setLoading(true);
-      let query = supabaseClient
+      let query = supabase
         .from('habito_registros')
         .select('*')
         .eq('user_id', user.id)
@@ -93,7 +93,7 @@ export function useHabits() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('habitos')
         .insert({
           ...habitData,
@@ -117,7 +117,7 @@ export function useHabits() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('habitos')
         .update(updates)
         .eq('id', habitId)
@@ -142,7 +142,7 @@ export function useHabits() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase
         .from('habitos')
         .update({ ativo: false })
         .eq('id', habitId)
@@ -164,7 +164,7 @@ export function useHabits() {
     try {
       // Verificar se já existe registro para hoje
       const today = new Date().toISOString().split('T')[0];
-      const { data: existingRecord } = await supabaseClient
+      const { data: existingRecord } = await supabase
         .from('habito_registros')
         .select('id')
         .eq('habito_id', habitId)
@@ -174,7 +174,7 @@ export function useHabits() {
 
       if (existingRecord) {
         // Atualizar registro existente
-        const { data, error } = await supabaseClient
+        const { data, error } = await supabase
           .from('habito_registros')
           .update(recordData)
           .eq('id', existingRecord.id)
@@ -189,7 +189,7 @@ export function useHabits() {
         return data;
       } else {
         // Criar novo registro
-        const { data, error } = await supabaseClient
+        const { data, error } = await supabase
           .from('habito_registros')
           .insert({
             ...recordData,
@@ -219,7 +219,7 @@ export function useHabits() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('habito_registros')
         .select('*')
         .eq('habito_id', habitId)

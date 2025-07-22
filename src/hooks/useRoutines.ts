@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabaseClient } from '../services/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './useAuth';
 
 export interface Routine {
@@ -53,7 +53,7 @@ export function useRoutines() {
 
     try {
       setLoading(true);
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('rotinas')
         .select('*')
         .eq('user_id', user.id)
@@ -75,7 +75,7 @@ export function useRoutines() {
 
     try {
       setLoading(true);
-      let query = supabaseClient
+      let query = supabase
         .from('rotina_execucoes')
         .select('*')
         .eq('user_id', user.id)
@@ -103,7 +103,7 @@ export function useRoutines() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('rotinas')
         .insert({
           ...routineData,
@@ -127,7 +127,7 @@ export function useRoutines() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('rotinas')
         .update(updates)
         .eq('id', routineId)
@@ -152,7 +152,7 @@ export function useRoutines() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase
         .from('rotinas')
         .update({ ativa: false })
         .eq('id', routineId)
@@ -176,7 +176,7 @@ export function useRoutines() {
       const now = new Date().toTimeString().split(' ')[0];
 
       // Verificar se já existe execução para hoje
-      const { data: existingExecution } = await supabaseClient
+      const { data: existingExecution } = await supabase
         .from('rotina_execucoes')
         .select('id')
         .eq('rotina_id', routineId)
@@ -188,7 +188,7 @@ export function useRoutines() {
         throw new Error('Rotina já foi iniciada hoje');
       }
 
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('rotina_execucoes')
         .insert({
           rotina_id: routineId,
@@ -219,7 +219,7 @@ export function useRoutines() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('rotina_execucoes')
         .update(updates)
         .eq('id', executionId)
@@ -245,7 +245,7 @@ export function useRoutines() {
 
     try {
       // Buscar execução atual
-      const { data: execution, error: fetchError } = await supabaseClient
+      const { data: execution, error: fetchError } = await supabase
         .from('rotina_execucoes')
         .select('atividades_concluidas')
         .eq('id', executionId)
@@ -300,7 +300,7 @@ export function useRoutines() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('rotina_execucoes')
         .select('*')
         .eq('rotina_id', routineId)
