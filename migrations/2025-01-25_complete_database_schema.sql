@@ -138,12 +138,14 @@ CREATE TABLE IF NOT EXISTS public.habit_completions (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     habit_id UUID REFERENCES public.user_habits(id) ON DELETE CASCADE NOT NULL,
     completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    completion_date DATE GENERATED ALWAYS AS (DATE(completed_at)) STORED,
     duration_minutes INTEGER,
     notes TEXT,
-    points_earned INTEGER DEFAULT 0,
-    UNIQUE(user_id, habit_id, completion_date)
+    points_earned INTEGER DEFAULT 0
 );
+
+-- Criar índice único para garantir apenas um completamento por hábito por dia
+CREATE UNIQUE INDEX IF NOT EXISTS idx_habit_completions_unique_daily 
+    ON public.habit_completions (user_id, habit_id, DATE(completed_at));
 
 -- Inserir categorias padrão de hábitos
 INSERT INTO public.habit_categories (name, description, icon, color) VALUES
