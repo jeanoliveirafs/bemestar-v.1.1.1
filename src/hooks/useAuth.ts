@@ -92,11 +92,7 @@ export function useAuth() {
 
       if (error) throw error;
 
-      // Criar perfil do usuário
-      if (data.user) {
-        await createUserProfile(data.user.id, email);
-      }
-
+      // O perfil será criado automaticamente pelo trigger do banco de dados
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao criar conta';
@@ -142,21 +138,7 @@ export function useAuth() {
     }
   };
 
-  const createUserProfile = async (userId: string, email: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email,
-        });
 
-      if (error) throw error;
-    } catch (err) {
-      console.error('Erro ao criar perfil:', err);
-      throw err;
-    }
-  };
 
   const updateUserProfile = async (updates: Partial<UserProfile>) => {
     try {

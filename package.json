@@ -5,12 +5,23 @@
   "description": "Plataforma SaaS de Bem-estar Mental e Autocuidado",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "lint": "eslint .",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "test": "vitest",
-    "test:coverage": "vitest --coverage",
+    "type-check": "tsc --noEmit",
     "deploy": "npm run build && vercel --prod",
-    "type-check": "tsc --noEmit"
+    "deploy:auto": "node deploy-vercel.js",
+    "deploy:quick": "npm run build && npx vercel --prod",
+    "vercel:login": "npx vercel login",
+    "vercel:status": "npx vercel ls",
+    "git:auto": "node git-auto.cjs",
+    "git:commit": "node git-auto.cjs commit",
+    "git:deploy": "node git-auto.cjs deploy",
+    "git:status": "git status",
+    "git:log": "git log --oneline -10",
+    "update": "npm run git:auto"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

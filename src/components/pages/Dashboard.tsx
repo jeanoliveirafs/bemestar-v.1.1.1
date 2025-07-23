@@ -7,6 +7,7 @@ import {
   Shield, Bell, Sparkles, PieChart, Music
 } from 'lucide-react';
 
+
 // Importar os novos componentes (com fallback)
 const PsychologicalScales = React.lazy(() => import('../features/PsychologicalScales').catch(() => ({ default: () => <div className="p-8 text-center">Escalas Psicológicas - Em desenvolvimento</div> })));
 const CrisisActionPlan = React.lazy(() => import('../features/CrisisActionPlan').catch(() => ({ default: () => <div className="p-8 text-center">Plano de Crise - Em desenvolvimento</div> })));
@@ -217,6 +218,8 @@ export default function Dashboard() {
             Seu bem-estar emocional é nossa prioridade.
           </p>
         </div>
+
+
 
         {/* Espaço de Desabafo */}
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-8 rounded-3xl border border-blue-100 dark:border-blue-800 mb-8">
