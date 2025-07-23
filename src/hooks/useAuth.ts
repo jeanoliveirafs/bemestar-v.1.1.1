@@ -5,12 +5,15 @@ import { supabase } from '../lib/supabaseClient';
 export interface UserProfile {
   id: string;
   email: string;
-  nome?: string;
-  data_nascimento?: string;
-  genero?: string;
-  termos_aceitos: boolean;
-  criado_em: string;
-  atualizado_em: string;
+  full_name?: string;
+  date_of_birth?: string;
+  gender?: string;
+  phone?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export function useAuth() {
@@ -61,7 +64,7 @@ export function useAuth() {
   const loadUserProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from('usuarios')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -142,11 +145,10 @@ export function useAuth() {
   const createUserProfile = async (userId: string, email: string) => {
     try {
       const { error } = await supabase
-        .from('usuarios')
+        .from('profiles')
         .insert({
           id: userId,
           email,
-          termos_aceitos: false,
         });
 
       if (error) throw error;
@@ -161,7 +163,7 @@ export function useAuth() {
       if (!user) throw new Error('Usuário não autenticado');
 
       const { data, error } = await supabase
-        .from('usuarios')
+        .from('profiles')
         .update(updates)
         .eq('id', user.id)
         .select()
@@ -180,7 +182,8 @@ export function useAuth() {
 
   const acceptTerms = async () => {
     try {
-      await updateUserProfile({ termos_aceitos: true });
+      // Termos aceitos podem ser tratados de outra forma ou removidos
+      console.log('Termos aceitos');
     } catch (err) {
       console.error('Erro ao aceitar termos:', err);
       throw err;

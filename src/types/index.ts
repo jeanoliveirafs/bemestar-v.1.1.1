@@ -156,7 +156,6 @@ export interface AppConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
   n8nWebhookUrl: string;
-  isDevelopment: boolean;
 }
 
 // Tipos para notificações

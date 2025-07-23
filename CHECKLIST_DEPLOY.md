@@ -7,18 +7,12 @@
 - [ ] Projeto criado com nome `refugio-digital`
 - [ ] Script SQL executado (`migrations/2025-01-25_refugio_digital_complete_schema.sql`)
 - [ ] Todas as 15 tabelas criadas corretamente
-- [ ] URLs de desenvolvimento configuradas (localhost:5174)
+- [ ] URLs de produção configuradas
 - [ ] Credenciais copiadas (URL + anon key)
 
-### 2. Configuração Local
-- [ ] Arquivo `.env.local` atualizado com credenciais reais
-- [ ] Dependências instaladas (`npm install`)
-- [ ] Aplicação rodando localmente (`npm run dev`)
-- [ ] Sem erros no console do navegador
-- [ ] Funcionalidades básicas testadas
-
-### 3. Preparação do Código
-- [ ] Build local funcionando (`npm run build`)
+### 2. Preparação do Código
+- [ ] Dependências atualizadas (`npm install`)
+- [ ] Build funcionando (`npm run build`)
 - [ ] Lint sem erros (`npm run lint`)
 - [ ] TypeScript sem erros (`npm run type-check`)
 - [ ] Arquivos desnecessários removidos
@@ -43,7 +37,7 @@ git push -u origin main
 ```
 - [ ] Código enviado para o GitHub
 - [ ] Todos os arquivos commitados
-- [ ] `.env.local` NÃO commitado (deve estar no .gitignore)
+- [ ] Variáveis de ambiente configuradas no Vercel
 
 ## 🚀 Deploy no Vercel
 
@@ -57,7 +51,7 @@ git push -u origin main
 - [ ] **Build Command**: `npm run build`
 - [ ] **Output Directory**: `dist`
 - [ ] **Install Command**: `npm install`
-- [ ] **Development Command**: `npm run dev`
+- [ ] **Framework**: Vite detectado automaticamente
 
 ### 3. Variáveis de Ambiente
 Adicione estas variáveis no Vercel:
@@ -143,10 +137,10 @@ Adicione estas variáveis no Vercel:
 ### Problemas Comuns
 
 **Build falha no Vercel:**
-- [ ] Verificar logs de build
+- [ ] Verificar logs de build no painel do Vercel
 - [ ] Confirmar dependências no package.json
-- [ ] Testar build local
-- [ ] Verificar variáveis de ambiente
+- [ ] Verificar variáveis de ambiente no Vercel
+- [ ] Confirmar configurações de build
 
 **Erro de CORS:**
 - [ ] URL configurada no Supabase

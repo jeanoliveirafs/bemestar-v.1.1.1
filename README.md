@@ -104,19 +104,18 @@ npm install
 ```
 
 ### 3. Configure as Variáveis de Ambiente
-Copie o arquivo `.env.local` e configure suas credenciais:
+As variáveis de ambiente são configuradas diretamente no Vercel para produção:
 
 ```env
 # Supabase
-VITE_SUPABASE_URL=https://xxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_URL=https://yeizisgimwwwvestmhnj.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-# OpenAI (opcional)
+# OpenAI
 VITE_OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # App
-VITE_APP_NAME="Refúgio Digital"
-VITE_APP_URL=http://localhost:5174
+VITE_APP_ENV=production
 ```
 
 ### 4. Configure o Banco de Dados
@@ -124,12 +123,8 @@ VITE_APP_URL=http://localhost:5174
 2. Execute o script SQL em `migrations/2025-01-25_refugio_digital_complete_schema.sql`
 3. Configure a autenticação e URLs permitidas
 
-### 5. Execute o Projeto
-```bash
-npm run dev
-```
-
-Acesse: `http://localhost:5174`
+### 5. Deploy
+O projeto é executado diretamente em produção através do Vercel. Consulte o arquivo `DEPLOY_GUIDE.md` para instruções completas.
 
 ## 📦 Deploy
 

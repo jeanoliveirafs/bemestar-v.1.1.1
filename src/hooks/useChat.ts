@@ -1,31 +1,31 @@
 import { useState, useEffect } from 'react';
-import { supabaseClient } from '../services/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './useAuth';
 import { chatgptService } from '../services/chatgptService';
 
 export interface ChatMessage {
   id: string;
   user_id: string;
-  tipo_conversa: 'geral' | 'crise' | 'habitos' | 'emocoes' | 'rotinas' | 'mindfulness';
-  mensagem_usuario: string;
-  resposta_ia: string;
-  contexto?: any; // JSON com contexto adicional
-  avaliacao_util?: boolean;
+  conversation_type: 'general' | 'crisis' | 'habits' | 'emotions' | 'routines' | 'mindfulness';
+  user_message: string;
+  ai_response: string;
+  context?: any; // JSON com contexto adicional
+  is_helpful?: boolean;
   feedback?: string;
-  criado_em: string;
+  created_at: string;
 }
 
 export interface AIContentCache {
   id: string;
-  tipo_conteudo: 'dica' | 'exercicio' | 'meditacao' | 'reflexao' | 'motivacao';
-  categoria: string;
-  titulo: string;
-  conteudo: string;
+  content_type: 'tip' | 'exercise' | 'meditation' | 'reflection' | 'motivation';
+  category: string;
+  title: string;
+  content: string;
   tags?: string[];
-  contexto_uso?: any;
-  popularidade: number;
-  criado_em: string;
-  atualizado_em: string;
+  usage_context?: any;
+  popularity: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ChatContext {
@@ -52,15 +52,15 @@ export function useChat() {
 
     try {
       setLoading(true);
-      let query = supabaseClient
-        .from('historico_chat')
+      let query = supabase
+        .from('chat_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('criado_em', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(limit);
 
       if (tipoConversa) {
-        query = query.eq('tipo_conversa', tipoConversa);
+        query = query.eq('conversation_type', tipoConversa);
       }
 
       const { data, error } = await query;
@@ -77,17 +77,17 @@ export function useChat() {
   // Carregar cache de conteúdo IA
   const loadAIContentCache = async (tipoConteudo?: string, categoria?: string) => {
     try {
-      let query = supabaseClient
-        .from('conteudo_ia_cache')
+      let query = supabase
+        .from('ai_content_cache')
         .select('*')
-        .order('popularidade', { ascending: false })
+        .order('popularity', { ascending: false })
         .limit(100);
 
       if (tipoConteudo) {
-        query = query.eq('tipo_conteudo', tipoConteudo);
+        query = query.eq('content_type', tipoConteudo);
       }
       if (categoria) {
-        query = query.eq('categoria', categoria);
+        query = query.eq('category', categoria);
       }
 
       const { data, error } = await query;
@@ -118,37 +118,37 @@ export function useChat() {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       
-      const { data: recentEmotions } = await supabaseClient
-        .from('emocao_posts')
-        .select('emocao_principal, intensidade, criado_em')
+      const { data: recentEmotions } = await supabase
+        .from('emotion_posts')
+        .select('emotion_category, created_at')
         .eq('user_id', user.id)
-        .gte('criado_em', weekAgo.toISOString())
-        .order('criado_em', { ascending: false })
+        .gte('created_at', weekAgo.toISOString())
+        .order('created_at', { ascending: false })
         .limit(10);
 
       // Buscar hábitos ativos
-      const { data: activeHabits } = await supabaseClient
-        .from('habitos')
-        .select('nome, categoria, frequencia_tipo')
+      const { data: activeHabits } = await supabase
+        .from('user_habits')
+        .select('name, category, frequency_type')
         .eq('user_id', user.id)
-        .eq('ativo', true)
+        .eq('is_active', true)
         .limit(10);
 
-      // Buscar rotinas para hoje
-      const { data: currentRoutines } = await supabaseClient
-        .from('rotinas')
-        .select('nome, categoria, duracao_estimada')
+      // Buscar routines para hoje
+      const { data: currentRoutines } = await supabase
+        .from('user_routines')
+        .select('name, category, estimated_duration')
         .eq('user_id', user.id)
-        .eq('ativa', true)
-        .contains('dias_semana', [dayOfWeek])
+        .eq('is_active', true)
+        .contains('days_of_week', [dayOfWeek])
         .limit(5);
 
       // Última interação
-      const { data: lastChat } = await supabaseClient
-        .from('historico_chat')
-        .select('criado_em')
+      const { data: lastChat } = await supabase
+        .from('chat_history')
+        .select('created_at')
         .eq('user_id', user.id)
-        .order('criado_em', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
@@ -159,7 +159,7 @@ export function useChat() {
         currentRoutines: currentRoutines || [],
         timeOfDay,
         dayOfWeek,
-        lastInteraction: lastChat?.criado_em,
+        lastInteraction: lastChat?.created_at,
       };
     } catch (err) {
       console.error('Erro ao construir contexto:', err);
@@ -170,7 +170,7 @@ export function useChat() {
   // Enviar mensagem para IA
   const sendMessage = async (
     mensagem: string, 
-    tipoConversa: ChatMessage['tipo_conversa'] = 'geral',
+    tipoConversa: ChatMessage['conversation_type'] = 'general',
     contextoAdicional?: any
   ): Promise<ChatMessage | null> => {
     if (!user) throw new Error('Usuário não autenticado');
@@ -195,14 +195,14 @@ export function useChat() {
       );
 
       // Salvar no histórico
-      const { data, error } = await supabaseClient
-        .from('historico_chat')
+      const { data, error } = await supabase
+        .from('chat_history')
         .insert({
           user_id: user.id,
-          tipo_conversa: tipoConversa,
-          mensagem_usuario: mensagem,
-          resposta_ia: resposta,
-          contexto: fullContext,
+          conversation_type: tipoConversa,
+          user_message: mensagem,
+          ai_response: resposta,
+          context: fullContext,
         })
         .select()
         .single();
@@ -230,11 +230,11 @@ export function useChat() {
       
       if (keywords.length === 0) return [];
 
-      const { data, error } = await supabaseClient
-        .from('conteudo_ia_cache')
+      const { data, error } = await supabase
+        .from('ai_content_cache')
         .select('*')
-        .or(`categoria.ilike.%${tipoConversa}%,tags.cs.{${keywords.join(',')}}`)  
-        .order('popularidade', { ascending: false })
+        .or(`category.ilike.%${tipoConversa}%,tags.cs.{${keywords.join(',')}}`)  
+        .order('popularity', { ascending: false })
         .limit(5);
 
       if (error) throw error;
@@ -250,10 +250,10 @@ export function useChat() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { data, error } = await supabaseClient
-        .from('historico_chat')
+      const { data, error } = await supabase
+        .from('chat_history')
         .update({
-          avaliacao_util: util,
+          is_helpful: util,
           feedback: feedback,
         })
         .eq('id', chatId)
@@ -275,13 +275,13 @@ export function useChat() {
   };
 
   // Adicionar conteúdo ao cache
-  const addToCache = async (contentData: Omit<AIContentCache, 'id' | 'popularidade' | 'criado_em' | 'atualizado_em'>) => {
+  const addToCache = async (contentData: Omit<AIContentCache, 'id' | 'popularity' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data, error } = await supabaseClient
-        .from('conteudo_ia_cache')
+      const { data, error } = await supabase
+        .from('ai_content_cache')
         .insert({
           ...contentData,
-          popularidade: 1,
+          popularity: 1,
         })
         .select()
         .single();
@@ -299,7 +299,7 @@ export function useChat() {
   // Incrementar popularidade do conteúdo
   const incrementPopularity = async (contentId: string) => {
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase
         .rpc('increment_popularity', { content_id: contentId });
 
       if (error) throw error;
@@ -314,30 +314,30 @@ export function useChat() {
       const context = await buildChatContext();
       
       const suggestions: Record<string, string[]> = {
-        geral: [
+        general: [
           'Como posso melhorar meu bem-estar hoje?',
           'Preciso de motivação para continuar',
           'Como lidar com o estresse do dia a dia?',
         ],
-        crise: [
+        crisis: [
           'Estou me sentindo muito ansioso',
           'Preciso de ajuda para me acalmar',
           'Como posso lidar com pensamentos negativos?',
         ],
-        habitos: [
+        habits: [
           'Como criar um novo hábito saudável?',
           'Estou tendo dificuldade para manter meus hábitos',
           'Quais hábitos são mais importantes para o bem-estar?',
         ],
-        emocoes: [
+        emotions: [
           'Como identificar melhor minhas emoções?',
           'Estou confuso sobre o que estou sentindo',
           'Como processar emoções difíceis?',
         ],
-        rotinas: [
+        routines: [
           'Como criar uma rotina matinal eficaz?',
           'Preciso de ajuda para organizar meu dia',
-          'Como manter consistência nas minhas rotinas?',
+          'Como manter consistência nas minhas routines?',
         ],
         mindfulness: [
           'Como começar a meditar?',
@@ -346,7 +346,7 @@ export function useChat() {
         ],
       };
 
-      return suggestions[tipoConversa] || suggestions.geral;
+      return suggestions[tipoConversa] || suggestions.general;
     } catch (err) {
       console.error('Erro ao obter sugestões:', err);
       return [];
@@ -358,20 +358,20 @@ export function useChat() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      let query = supabaseClient
-        .from('historico_chat')
+      let query = supabase
+        .from('chat_history')
         .delete()
         .eq('user_id', user.id);
 
       if (tipoConversa) {
-        query = query.eq('tipo_conversa', tipoConversa);
+        query = query.eq('conversation_type', tipoConversa);
       }
 
       const { error } = await query;
       if (error) throw error;
 
       if (tipoConversa) {
-        setChatHistory(prev => prev.filter(chat => chat.tipo_conversa !== tipoConversa));
+        setChatHistory(prev => prev.filter(chat => chat.conversation_type !== tipoConversa));
       } else {
         setChatHistory([]);
       }

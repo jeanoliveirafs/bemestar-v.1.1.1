@@ -96,9 +96,9 @@ const Comunidade: React.FC<ComunidadeProps> = ({ onNavigate }) => {
   }, []);
 
   const carregarDados = () => {
-    const postsSalvos = localStorage.getItem('posts_emocao');
-    const reacoesSalvas = localStorage.getItem('reacoes_posts');
-    const comentariosSalvos = localStorage.getItem('comentarios_posts');
+    const postsSalvos = localStorage.getItem('emotion_posts');
+    const reacoesSalvas = localStorage.getItem('emotion_reactions');
+    const comentariosSalvos = localStorage.getItem('emotion_comments');
     
     if (postsSalvos) {
       setPosts(JSON.parse(postsSalvos));
@@ -114,7 +114,7 @@ const Comunidade: React.FC<ComunidadeProps> = ({ onNavigate }) => {
   };
 
   const inicializarPostsExemplo = () => {
-    const postsSalvos = localStorage.getItem('posts_emocao');
+    const postsSalvos = localStorage.getItem('emotion_posts');
     if (!postsSalvos) {
       const postsExemplo: PostEmocao[] = [
         {
@@ -164,23 +164,23 @@ const Comunidade: React.FC<ComunidadeProps> = ({ onNavigate }) => {
         }
       ];
       
-      localStorage.setItem('posts_emocao', JSON.stringify(postsExemplo));
+      localStorage.setItem('emotion_posts', JSON.stringify(postsExemplo));
       setPosts(postsExemplo);
     }
   };
 
   const salvarPosts = (novosPosts: PostEmocao[]) => {
-    localStorage.setItem('posts_emocao', JSON.stringify(novosPosts));
+    localStorage.setItem('emotion_posts', JSON.stringify(novosPosts));
     setPosts(novosPosts);
   };
 
   const salvarReacoes = (novasReacoes: Reacao[]) => {
-    localStorage.setItem('reacoes_posts', JSON.stringify(novasReacoes));
+    localStorage.setItem('emotion_reactions', JSON.stringify(novasReacoes));
     setReacoes(novasReacoes);
   };
 
   const salvarComentarios = (novosComentarios: Comentario[]) => {
-    localStorage.setItem('comentarios_posts', JSON.stringify(novosComentarios));
+    localStorage.setItem('emotion_comments', JSON.stringify(novosComentarios));
     setComentarios(novosComentarios);
   };
 

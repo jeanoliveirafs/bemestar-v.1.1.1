@@ -5,29 +5,29 @@ import { useAuth } from './useAuth';
 export interface Habit {
   id: string;
   user_id: string;
-  nome: string;
-  descricao?: string;
-  categoria: string;
-  frequencia_tipo: 'diario' | 'semanal' | 'mensal';
-  frequencia_valor: number;
-  meta_diaria?: number;
-  unidade?: string;
-  cor?: string;
-  icone?: string;
-  ativo: boolean;
-  criado_em: string;
-  atualizado_em: string;
+  category_id?: string;
+  title: string;
+  description?: string;
+  frequency_type: 'daily' | 'weekly' | 'custom';
+  frequency_config: Record<string, any>;
+  reminder_enabled: boolean;
+  reminder_times: string[];
+  target_duration_minutes?: number;
+  points_per_completion: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface HabitRecord {
   id: string;
-  habito_id: string;
+  habit_id: string;
   user_id: string;
-  data_registro: string;
-  valor?: number;
-  concluido: boolean;
-  observacoes?: string;
-  criado_em: string;
+  completed_at: string;
+  completion_date: string;
+  duration_minutes?: number;
+  notes?: string;
+  points_earned: number;
 }
 
 export function useHabits() {
@@ -44,11 +44,11 @@ export function useHabits() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('habitos')
+        .from('user_habits')
         .select('*')
         .eq('user_id', user.id)
-        .eq('ativo', true)
-        .order('criado_em', { ascending: false });
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setHabits(data || []);
@@ -66,16 +66,16 @@ export function useHabits() {
     try {
       setLoading(true);
       let query = supabase
-        .from('habito_registros')
+        .from('habit_completions')
         .select('*')
         .eq('user_id', user.id)
-        .order('data_registro', { ascending: false });
+        .order('completed_at', { ascending: false });
 
       if (startDate) {
-        query = query.gte('data_registro', startDate);
+        query = query.gte('completion_date', startDate);
       }
       if (endDate) {
-        query = query.lte('data_registro', endDate);
+        query = query.lte('completion_date', endDate);
       }
 
       const { data, error } = await query;
@@ -89,12 +89,12 @@ export function useHabits() {
   };
 
   // Criar novo hábito
-  const createHabit = async (habitData: Omit<Habit, 'id' | 'user_id' | 'criado_em' | 'atualizado_em'>) => {
+  const createHabit = async (habitData: Omit<Habit, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
       const { data, error } = await supabase
-        .from('habitos')
+        .from('user_habits')
         .insert({
           ...habitData,
           user_id: user.id,
@@ -118,7 +118,7 @@ export function useHabits() {
 
     try {
       const { data, error } = await supabase
-        .from('habitos')
+        .from('user_habits')
         .update(updates)
         .eq('id', habitId)
         .eq('user_id', user.id)
@@ -143,8 +143,8 @@ export function useHabits() {
 
     try {
       const { error } = await supabase
-        .from('habitos')
-        .update({ ativo: false })
+        .from('user_habits')
+        .update({ is_active: false })
         .eq('id', habitId)
         .eq('user_id', user.id);
 
@@ -158,24 +158,24 @@ export function useHabits() {
   };
 
   // Registrar execução de hábito
-  const recordHabit = async (habitId: string, recordData: Omit<HabitRecord, 'id' | 'habito_id' | 'user_id' | 'criado_em'>) => {
+  const recordHabit = async (habitId: string, recordData: Omit<HabitRecord, 'id' | 'habit_id' | 'user_id' | 'completion_date'>) => {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
       // Verificar se já existe registro para hoje
       const today = new Date().toISOString().split('T')[0];
       const { data: existingRecord } = await supabase
-        .from('habito_registros')
+        .from('habit_completions')
         .select('id')
-        .eq('habito_id', habitId)
+        .eq('habit_id', habitId)
         .eq('user_id', user.id)
-        .eq('data_registro', recordData.data_registro || today)
+        .eq('completion_date', today)
         .single();
 
       if (existingRecord) {
         // Atualizar registro existente
         const { data, error } = await supabase
-          .from('habito_registros')
+          .from('habit_completions')
           .update(recordData)
           .eq('id', existingRecord.id)
           .select()
@@ -190,12 +190,11 @@ export function useHabits() {
       } else {
         // Criar novo registro
         const { data, error } = await supabase
-          .from('habito_registros')
+          .from('habit_completions')
           .insert({
             ...recordData,
-            habito_id: habitId,
+            habit_id: habitId,
             user_id: user.id,
-            data_registro: recordData.data_registro || today,
           })
           .select()
           .single();
@@ -220,17 +219,17 @@ export function useHabits() {
       startDate.setDate(startDate.getDate() - days);
       
       const { data, error } = await supabase
-        .from('habito_registros')
+        .from('habit_completions')
         .select('*')
-        .eq('habito_id', habitId)
+        .eq('habit_id', habitId)
         .eq('user_id', user.id)
-        .gte('data_registro', startDate.toISOString().split('T')[0])
-        .order('data_registro', { ascending: true });
+        .gte('completion_date', startDate.toISOString().split('T')[0])
+        .order('completion_date', { ascending: true });
 
       if (error) throw error;
 
       const totalDays = days;
-      const completedDays = data?.filter(record => record.concluido).length || 0;
+      const completedDays = data?.length || 0;
       const streak = calculateStreak(data || []);
       
       return {
@@ -251,8 +250,7 @@ export function useHabits() {
     if (!records.length) return 0;
 
     const sortedRecords = records
-      .filter(record => record.concluido)
-      .sort((a, b) => new Date(b.data_registro).getTime() - new Date(a.data_registro).getTime());
+      .sort((a, b) => new Date(b.completion_date).getTime() - new Date(a.completion_date).getTime());
 
     if (!sortedRecords.length) return 0;
 
@@ -260,7 +258,7 @@ export function useHabits() {
     const today = new Date();
     
     for (let i = 0; i < sortedRecords.length; i++) {
-      const recordDate = new Date(sortedRecords[i].data_registro);
+      const recordDate = new Date(sortedRecords[i].completion_date);
       const expectedDate = new Date(today);
       expectedDate.setDate(today.getDate() - i);
       

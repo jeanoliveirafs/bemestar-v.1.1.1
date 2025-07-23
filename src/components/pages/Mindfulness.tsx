@@ -266,7 +266,7 @@ const Mindfulness: React.FC<MindfulnessProps> = ({ onNavigate }) => {
   }, [exercicioRespiracao, tempoFase]);
 
   const carregarDados = () => {
-    const sessoesSalvas = JSON.parse(localStorage.getItem('sessoes_mindfulness') || '[]');
+    const sessoesSalvas = JSON.parse(localStorage.getItem('mindfulness_sessions') || '[]');
     setSessoes(sessoesSalvas);
     
     // Calcular estatísticas
@@ -449,9 +449,9 @@ const Mindfulness: React.FC<MindfulnessProps> = ({ onNavigate }) => {
   };
 
   const salvarSessao = (sessao: SessaoMindfulness) => {
-    const sessoesSalvas = JSON.parse(localStorage.getItem('sessoes_mindfulness') || '[]');
+    const sessoesSalvas = JSON.parse(localStorage.getItem('mindfulness_sessions') || '[]');
     sessoesSalvas.push(sessao);
-    localStorage.setItem('sessoes_mindfulness', JSON.stringify(sessoesSalvas));
+    localStorage.setItem('mindfulness_sessions', JSON.stringify(sessoesSalvas));
     carregarDados();
   };
 

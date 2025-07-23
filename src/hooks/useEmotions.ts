@@ -4,32 +4,23 @@ import { useAuth } from './useAuth';
 
 export interface EmotionPost {
   id: string;
-  user_id: string;
-  emocao_principal: string;
-  intensidade: number; // 1-10
-  descricao?: string;
-  gatilhos?: string[];
-  contexto?: string;
-  localizacao?: string;
-  clima?: string;
-  pessoas_presentes?: string[];
-  atividade_atual?: string;
-  pensamentos?: string;
-  sensacoes_fisicas?: string;
-  estrategias_usadas?: string[];
-  tags?: string[];
-  privado: boolean;
-  criado_em: string;
-  atualizado_em: string;
+  user_id?: string;
+  anonymous_id?: string;
+  content: string;
+  emotion_category?: string;
+  is_anonymous: boolean;
+  is_moderated: boolean;
+  is_approved: boolean;
+  created_at: string;
 }
 
 export interface EmotionReaction {
   id: string;
   post_id: string;
   user_id: string;
-  tipo_reacao: 'apoio' | 'compreensao' | 'forca' | 'gratidao' | 'inspiracao';
-  comentario?: string;
-  criado_em: string;
+  reaction_type: 'support' | 'understanding' | 'strength' | 'gratitude' | 'inspiration';
+  comment?: string;
+  created_at: string;
 }
 
 export interface EmotionInsight {
@@ -55,11 +46,11 @@ export function useEmotions() {
 
     try {
       setLoading(true);
-      let query = supabaseClient
-        .from('emocao_posts')
+      let query = supabase
+        .from('emotion_posts')
         .select('*')
         .eq('user_id', user.id)
-        .order('criado_em', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (limit) {
         query = query.limit(limit);
@@ -88,10 +79,10 @@ export function useEmotions() {
     if (!user) return;
 
     try {
-      let query = supabaseClient
-        .from('emocao_reacoes')
+      let query = supabase
+        .from('emotion_reactions')
         .select('*')
-        .order('criado_em', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (postIds && postIds.length > 0) {
         query = query.in('post_id', postIds);
@@ -106,12 +97,12 @@ export function useEmotions() {
   };
 
   // Criar novo post de emoção
-  const createEmotionPost = async (postData: Omit<EmotionPost, 'id' | 'user_id' | 'criado_em' | 'atualizado_em'>) => {
+  const createEmotionPost = async (postData: Omit<EmotionPost, 'id' | 'user_id' | 'created_at'>) => {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
       const { data, error } = await supabase
-        .from('emocao_posts')
+        .from('emotion_posts')
         .insert({
           ...postData,
           user_id: user.id,
@@ -130,12 +121,12 @@ export function useEmotions() {
   };
 
   // Atualizar post de emoção
-  const updateEmotionPost = async (postId: string, updates: Partial<EmotionPost>) => {
+  const updateEmotionPost = async (postId: string, updates: Partial<Omit<EmotionPost, 'id' | 'user_id' | 'created_at'>>) => {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { data, error } = await supabaseClient
-        .from('emocao_posts')
+      const { data, error } = await supabase
+        .from('emotion_posts')
         .update(updates)
         .eq('id', postId)
         .eq('user_id', user.id)
@@ -160,7 +151,7 @@ export function useEmotions() {
 
     try {
       const { error } = await supabase
-        .from('emocao_posts')
+        .from('emotion_posts')
         .delete()
         .eq('id', postId)
         .eq('user_id', user.id);
@@ -175,13 +166,13 @@ export function useEmotions() {
   };
 
   // Adicionar reação a um post
-  const addReaction = async (postId: string, reactionData: Omit<EmotionReaction, 'id' | 'post_id' | 'user_id' | 'criado_em'>) => {
+  const addReaction = async (postId: string, reactionData: Omit<EmotionReaction, 'id' | 'post_id' | 'user_id' | 'created_at'>) => {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
       // Verificar se já existe reação do usuário para este post
-      const { data: existingReaction } = await supabaseClient
-        .from('emocao_reacoes')
+      const { data: existingReaction } = await supabase
+        .from('emotion_reactions')
         .select('id')
         .eq('post_id', postId)
         .eq('user_id', user.id)
@@ -189,8 +180,8 @@ export function useEmotions() {
 
       if (existingReaction) {
         // Atualizar reação existente
-        const { data, error } = await supabaseClient
-          .from('emocao_reacoes')
+        const { data, error } = await supabase
+          .from('emotion_reactions')
           .update(reactionData)
           .eq('id', existingReaction.id)
           .select()
@@ -204,8 +195,8 @@ export function useEmotions() {
         return data;
       } else {
         // Criar nova reação
-        const { data, error } = await supabaseClient
-          .from('emocao_reacoes')
+        const { data, error } = await supabase
+          .from('emotion_reactions')
           .insert({
             ...reactionData,
             post_id: postId,
@@ -230,8 +221,8 @@ export function useEmotions() {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
-      const { error } = await supabaseClient
-        .from('emocao_reacoes')
+      const { error } = await supabase
+        .from('emotion_reactions')
         .delete()
         .eq('post_id', postId)
         .eq('user_id', user.id);
@@ -255,12 +246,12 @@ export function useEmotions() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       
-      const { data, error } = await supabaseClient
-        .from('emocao_posts')
+      const { data, error } = await supabase
+        .from('emotion_posts')
         .select('*')
         .eq('user_id', user.id)
-        .gte('criado_em', startDate.toISOString())
-        .order('criado_em', { ascending: true });
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
 
@@ -275,7 +266,9 @@ export function useEmotions() {
 
       // Processar posts
       posts.forEach(post => {
-        const emotion = post.emocao_principal;
+        const emotion = post.emotion_category;
+        if (!emotion) return;
+        
         const existing = emotionMap.get(emotion) || {
           count: 0,
           totalIntensity: 0,
@@ -285,10 +278,8 @@ export function useEmotions() {
         };
 
         existing.count++;
-        existing.totalIntensity += post.intensidade;
-        existing.triggers.push(...(post.gatilhos || []));
-        existing.strategies.push(...(post.estrategias_usadas || []));
-        existing.times.push(new Date(post.criado_em));
+        existing.totalIntensity += 5; // Default intensity since not stored
+        existing.times.push(new Date(post.created_at));
 
         emotionMap.set(emotion, existing);
       });
@@ -362,12 +353,12 @@ export function useEmotions() {
     if (!user) return [];
 
     try {
-      const { data, error } = await supabaseClient
-        .from('emocao_posts')
+      const { data, error } = await supabase
+        .from('emotion_posts')
         .select('*')
         .eq('user_id', user.id)
-        .eq('emocao_principal', emotion)
-        .order('criado_em', { ascending: false })
+        .eq('emotion_category', emotion)
+        .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) throw error;
@@ -383,12 +374,12 @@ export function useEmotions() {
     if (!user) return [];
 
     try {
-      const { data, error } = await supabaseClient
-        .from('emocao_posts')
+      const { data, error } = await supabase
+        .from('emotion_posts')
         .select('*')
         .eq('user_id', user.id)
-        .or(`descricao.ilike.%${searchTerm}%,pensamentos.ilike.%${searchTerm}%,contexto.ilike.%${searchTerm}%`)
-        .order('criado_em', { ascending: false })
+        .ilike('content', `%${searchTerm}%`)
+        .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) throw error;

@@ -5,8 +5,7 @@ Este documento descreve todos os endpoints da API para as 8 novas funcionalidade
 
 ## Base URL
 ```
-Production: https://your-app.supabase.co/rest/v1/
-Development: http://localhost:54321/rest/v1/
+Production: https://yeizisgimwwwvestmhnj.supabase.co/rest/v1/
 ```
 
 ## Autenticação

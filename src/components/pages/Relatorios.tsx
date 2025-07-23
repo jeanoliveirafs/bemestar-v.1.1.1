@@ -9,7 +9,7 @@ interface RelatoriosProps {
 interface DadosRelatorio {
   avaliacoes: any[];
   habitos: any[];
-  rotinas: any[];
+  routines: any[];
   emocoes: any[];
   mindfulness: any[];
   periodo: {
@@ -78,11 +78,11 @@ const Relatorios: React.FC<RelatoriosProps> = ({ onNavigate }) => {
       dataInicio.setDate(dataInicio.getDate() - diasPeriodo);
       
       // Carregar dados do localStorage
-      const avaliacoesSalvas = JSON.parse(localStorage.getItem('avaliacoes_psicologicas') || '[]');
-      const habitosSalvos = JSON.parse(localStorage.getItem('habitos_gamificacao') || '[]');
-      const rotinasSalvas = JSON.parse(localStorage.getItem('rotinas_personalizadas') || '[]');
-      const emocoesSalvas = JSON.parse(localStorage.getItem('posts_emocao') || '[]');
-      const mindfulnessSalvo = JSON.parse(localStorage.getItem('sessoes_mindfulness') || '[]');
+      const avaliacoesSalvas = JSON.parse(localStorage.getItem('user_scale_responses') || '[]');
+      const habitosSalvos = JSON.parse(localStorage.getItem('user_gamification') || '[]');
+      const rotinasSalvas = JSON.parse(localStorage.getItem('user_routines') || '[]');
+      const emocoesSalvas = JSON.parse(localStorage.getItem('emotion_posts') || '[]');
+      const mindfulnessSalvo = JSON.parse(localStorage.getItem('mindfulness_sessions') || '[]');
       
       // Filtrar por período
       const avaliacoesPeriodo = avaliacoesSalvas.filter((a: any) => 
@@ -94,7 +94,7 @@ const Relatorios: React.FC<RelatoriosProps> = ({ onNavigate }) => {
       );
       
       const rotinasPeriodo = rotinasSalvas.filter((r: any) => 
-        r.execucoes && r.execucoes.some((e: any) => new Date(e.data) >= dataInicio)
+        r.executions && r.executions.some((e: any) => new Date(e.execution_date) >= dataInicio)
       );
       
       const emocoesPeriodo = emocoesSalvas.filter((e: any) => 
@@ -108,7 +108,7 @@ const Relatorios: React.FC<RelatoriosProps> = ({ onNavigate }) => {
       const dadosRelatorio: DadosRelatorio = {
         avaliacoes: avaliacoesPeriodo,
         habitos: habitosPeriodo,
-        rotinas: rotinasPeriodo,
+        routines: rotinasPeriodo,
         emocoes: emocoesPeriodo,
         mindfulness: mindfulnessPeriodo,
         periodo: {
@@ -134,8 +134,8 @@ const Relatorios: React.FC<RelatoriosProps> = ({ onNavigate }) => {
       return total + (habito.execucoes?.filter((e: any) => e.concluido).length || 0);
     }, 0);
     
-    const tarefasRealizadas = dados.rotinas.reduce((total, rotina) => {
-      return total + (rotina.execucoes?.filter((e: any) => e.concluido).length || 0);
+    const tarefasRealizadas = dados.routines.reduce((total, rotina) => {
+      return total + (rotina.executions?.filter((e: any) => e.is_completed).length || 0);
     }, 0);
     
     const sessoesMindfulness = dados.mindfulness.length;

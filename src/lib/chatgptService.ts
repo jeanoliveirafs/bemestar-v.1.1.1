@@ -42,8 +42,8 @@ const SYSTEM_PROMPTS = {
     Ajude o usuário a criar, manter e otimizar hábitos que promovam saúde mental.
     Ofereça estratégias práticas, motivação e dicas baseadas em evidências científicas.`,
   
-  rotina: `Você é um especialista em organização pessoal e rotinas para bem-estar.
-    Ajude o usuário a estruturar rotinas que promovam equilíbrio mental e produtividade saudável.
+  routines: `Você é um especialista em organização pessoal e rotinas para bem-estar.
+Ajude o usuário a estruturar rotinas que promovam equilíbrio mental e produtividade saudável.
     Foque em estratégias realistas e sustentáveis.`,
   
   mindfulness: `Você é um instrutor de mindfulness e meditação.
@@ -154,14 +154,14 @@ async function saveToHistory(
 ): Promise<void> {
   try {
     const { error } = await supabase
-      .from('historico_chat')
+      .from('chat_history')
       .insert({
         user_id: userId,
-        mensagem_usuario: userMessage,
-        resposta_ia: aiResponse,
-        contexto: context,
-        tokens_usados: tokensUsed,
-        tempo_resposta: responseTime
+        user_message: userMessage,
+        ai_response: aiResponse,
+        context: context,
+        tokens_used: tokensUsed,
+        response_time: responseTime
       });
 
     if (error) {
@@ -181,10 +181,10 @@ export async function getChatHistory(
 ): Promise<ChatHistory[]> {
   try {
     const { data, error } = await supabase
-      .from('historico_chat')
-      .select('id, mensagem_usuario, resposta_ia, criado_em')
+      .from('chat_history')
+      .select('id, user_message, ai_response, created_at')
       .eq('user_id', userId)
-      .order('criado_em', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) {
@@ -236,11 +236,11 @@ export async function generateContent(
 async function cacheContent(type: string, content: string): Promise<void> {
   try {
     const { error } = await supabase
-      .from('conteudo_ia_cache')
+      .from('ai_content_cache')
       .insert({
-        tipo_conteudo: type,
-        conteudo: content,
-        ativo: true
+        content_type: type,
+        content: content,
+        is_active: true
       });
 
     if (error) {
@@ -259,7 +259,7 @@ function getFallbackResponse(context: string): string {
     geral: 'Estou aqui para te apoiar. Que tal tentarmos uma técnica de respiração? Inspire por 4 segundos, segure por 4, expire por 6. Repita algumas vezes.',
     crise: 'Entendo que você está passando por um momento difícil. Lembre-se: você não está sozinho. Se precisar de ajuda imediata, entre em contato com o CVV (188) ou procure um profissional de saúde mental.',
     habitos: 'Formar novos hábitos leva tempo. Comece pequeno: escolha uma ação simples que você possa fazer todos os dias. A consistência é mais importante que a perfeição.',
-    rotina: 'Uma boa rotina inclui tempo para autocuidado. Que tal reservar 10 minutos do seu dia para algo que te traz paz?',
+    routines: 'Uma boa rotina inclui tempo para autocuidado. Que tal reservar 10 minutos do seu dia para algo que te traz paz?',
     mindfulness: 'Vamos praticar atenção plena: observe sua respiração por alguns momentos. Sinta o ar entrando e saindo. Isso é mindfulness - estar presente no momento atual.'
   };
 

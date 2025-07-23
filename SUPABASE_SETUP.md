@@ -35,21 +35,21 @@
 ### Passo 3: Verificar Tabelas Criadas
 1. Vá para **"Table Editor"** no painel lateral
 2. Você deve ver as seguintes tabelas:
-   - `usuarios`
-   - `habitos`
-   - `habito_registros`
-   - `avaliacoes`
-   - `rotinas`
-   - `rotina_execucoes`
-   - `emocao_posts`
-   - `emocao_reacoes`
-   - `historico_chat`
-   - `contatos_emergencia`
-   - `conteudo_ia_cache`
-   - `relatorios_progresso`
-   - `sessoes_mindfulness`
-   - `gamificacao_pontos`
-   - `conquistas`
+   - `users`
+   - `habits`
+   - `habit_records`
+   - `psychological_assessments`
+   - `user_routines`
+   - `routine_executions`
+   - `emotion_posts`
+   - `emotion_reactions`
+   - `chat_history`
+   - `emergency_contacts`
+   - `ai_content_cache`
+   - `progress_reports`
+   - `mindfulness_sessions`
+   - `gamification_points`
+   - `achievements`
 
 ## 3. Configurar Autenticação
 
@@ -57,11 +57,11 @@
 1. Vá para **"Authentication"** > **"Settings"**
 2. Na seção **"Site URL"**, adicione:
    ```
-   http://localhost:5174
+   https://seu-dominio.vercel.app
    ```
 3. Na seção **"Redirect URLs"**, adicione:
    ```
-   http://localhost:5174/**
+   https://seu-dominio.vercel.app/**
    ```
 4. Clique em **"Save"**
 
@@ -119,23 +119,17 @@ VITE_APP_NAME="Refúgio Digital"
 VITE_APP_URL=http://localhost:5174
 ```
 
-## 6. Testar Conexão
+## 6. Deploy em Produção
 
-### Passo 1: Iniciar Aplicação
-```bash
-npm run dev
-```
+As variáveis de ambiente são configuradas diretamente no Vercel:
 
-### Passo 2: Verificar Console
-1. Abra o navegador em `http://localhost:5174`
-2. Abra o DevTools (F12)
-3. Vá para a aba **Console**
-4. Não deve haver erros relacionados ao Supabase
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `VITE_OPENAI_API_KEY`
+- `VITE_N8N_WEBHOOK_URL`
+- `VITE_APP_ENV=production`
 
-### Passo 3: Testar Funcionalidades
-1. Tente criar uma conta na aplicação
-2. Faça login
-3. Teste algumas funcionalidades básicas
+Após o deploy, teste o cadastro/login de usuários na aplicação em produção.
 
 ## 7. Configurações de Segurança
 

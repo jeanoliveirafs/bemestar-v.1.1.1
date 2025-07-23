@@ -34,9 +34,8 @@
 
 1. Vá para **Authentication > Settings**
 2. Em **Site URL**, adicione:
-   - Para desenvolvimento: `http://localhost:5174`
    - Para produção: `https://seu-dominio.vercel.app`
-3. Em **Redirect URLs**, adicione as mesmas URLs
+3. Em **Redirect URLs**, adicione a mesma URL
 4. Salve as configurações
 
 ### 4. Obter Credenciais
@@ -49,22 +48,9 @@
 
 ## 🔧 Configuração do Projeto
 
-### 1. Atualizar Variáveis de Ambiente
+### 1. Configuração de Produção
 
-Crie/atualize o arquivo `.env.local`:
-
-```env
-# Supabase
-VITE_SUPABASE_URL=https://xxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# OpenAI (opcional)
-VITE_OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# Configurações do App
-VITE_APP_NAME="Refúgio Digital"
-VITE_APP_URL=https://seu-dominio.vercel.app
-```
+Todas as variáveis de ambiente são configuradas diretamente no Vercel para produção. Não é necessário configurar arquivos locais.
 
 ### 2. Atualizar Configuração do Supabase
 
@@ -161,14 +147,8 @@ O RLS já está configurado no script SQL. Todas as tabelas têm políticas que 
 ## 🚀 Comandos Úteis
 
 ```bash
-# Desenvolvimento local
-npm run dev
-
 # Build para produção
 npm run build
-
-# Preview da build
-npm run preview
 
 # Deploy manual (se necessário)
 vercel --prod
@@ -190,8 +170,8 @@ vercel logs
 
 ### Erro de Build
 - Verifique se todas as dependências estão instaladas
-- Confirme que as variáveis de ambiente estão definidas
-- Teste o build localmente: `npm run build`
+- Confirme que as variáveis de ambiente estão definidas no Vercel
+- Verifique os logs de build no painel do Vercel
 
 ### Performance
 - Use `React.lazy()` para lazy loading (já implementado)
@@ -212,7 +192,7 @@ Se encontrar problemas:
 
 1. Verifique os logs no Vercel e Supabase
 2. Confirme que todas as variáveis de ambiente estão corretas
-3. Teste localmente primeiro
+3. Verifique os logs de produção no Vercel
 4. Consulte a documentação oficial do [Supabase](https://supabase.com/docs) e [Vercel](https://vercel.com/docs)
 
 ---

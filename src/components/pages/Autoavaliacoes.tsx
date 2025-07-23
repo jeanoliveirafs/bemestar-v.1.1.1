@@ -154,7 +154,7 @@ const Autoavaliacoes: React.FC<AutoavaliacoesProps> = ({ onNavigate }) => {
   }, []);
 
   const carregarHistorico = () => {
-    const avaliacoesSalvas = localStorage.getItem('avaliacoes');
+    const avaliacoesSalvas = localStorage.getItem('user_scale_responses');
     if (avaliacoesSalvas) {
       setHistorico(JSON.parse(avaliacoesSalvas));
     }
@@ -217,7 +217,7 @@ const Autoavaliacoes: React.FC<AutoavaliacoesProps> = ({ onNavigate }) => {
     };
 
     const avaliacoesAtualizadas = [...historico, novaAvaliacao];
-    localStorage.setItem('avaliacoes', JSON.stringify(avaliacoesAtualizadas));
+    localStorage.setItem('user_scale_responses', JSON.stringify(avaliacoesAtualizadas));
     
     setHistorico(avaliacoesAtualizadas);
     setAvaliacaoAtiva(null);

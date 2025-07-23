@@ -61,9 +61,9 @@ const Painel: React.FC<PainelProps> = ({ onNavigate }) => {
 
   const loadDashboardData = () => {
     // Carregar dados do localStorage
-    const avaliacoes = JSON.parse(localStorage.getItem('avaliacoes') || '[]');
-    const habitos = JSON.parse(localStorage.getItem('habitos') || '[]');
-    const registrosHumor = JSON.parse(localStorage.getItem('registros_humor') || '[]');
+    const avaliacoes = JSON.parse(localStorage.getItem('user_scale_responses') || '[]');
+    const habitos = JSON.parse(localStorage.getItem('user_habits') || '[]');
+    const registrosHumor = JSON.parse(localStorage.getItem('daily_mood_logs') || '[]');
     
     // Calcular estatísticas
     const hoje = new Date().toDateString();

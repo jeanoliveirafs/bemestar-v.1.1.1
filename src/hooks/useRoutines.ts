@@ -5,39 +5,39 @@ import { useAuth } from './useAuth';
 export interface Routine {
   id: string;
   user_id: string;
-  nome: string;
-  descricao?: string;
-  categoria: 'matinal' | 'noturna' | 'exercicio' | 'meditacao' | 'trabalho' | 'personalizada';
-  duracao_estimada: number; // em minutos
-  atividades: RoutineActivity[];
-  dias_semana: number[]; // 0-6 (domingo a sábado)
-  horario_preferido?: string;
-  ativa: boolean;
-  criado_em: string;
-  atualizado_em: string;
+  name: string;
+  description?: string;
+  category: 'morning' | 'evening' | 'exercise' | 'meditation' | 'work' | 'custom';
+  estimated_duration: number; // em minutos
+  activities: RoutineActivity[];
+  days_of_week: number[]; // 0-6 (domingo a sábado)
+  preferred_time?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface RoutineActivity {
   id: string;
-  nome: string;
-  descricao?: string;
-  duracao: number; // em minutos
-  ordem: number;
-  obrigatoria: boolean;
+  name: string;
+  description?: string;
+  duration: number; // em minutos
+  order: number;
+  is_required: boolean;
 }
 
 export interface RoutineExecution {
   id: string;
-  rotina_id: string;
+  routine_id: string;
   user_id: string;
-  data_execucao: string;
-  horario_inicio?: string;
-  horario_fim?: string;
-  atividades_concluidas: string[]; // IDs das atividades concluídas
-  avaliacao?: number; // 1-5
-  observacoes?: string;
-  concluida: boolean;
-  criado_em: string;
+  execution_date: string;
+  start_time?: string;
+  end_time?: string;
+  completed_activities: string[]; // IDs das atividades concluídas
+  rating?: number; // 1-5
+  notes?: string;
+  is_completed: boolean;
+  created_at: string;
 }
 
 export function useRoutines() {
@@ -47,45 +47,45 @@ export function useRoutines() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar rotinas do usuário
+  // Carregar routines do usuário
   const loadRoutines = async () => {
     if (!user) return;
 
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('rotinas')
+        .from('user_routines')
         .select('*')
         .eq('user_id', user.id)
-        .eq('ativa', true)
-        .order('criado_em', { ascending: false });
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setRoutines(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar rotinas');
+      setError(err instanceof Error ? err.message : 'Erro ao carregar routines');
     } finally {
       setLoading(false);
     }
   };
 
-  // Carregar execuções de rotinas
+  // Carregar execuções de routines
   const loadRoutineExecutions = async (startDate?: string, endDate?: string) => {
     if (!user) return;
 
     try {
       setLoading(true);
       let query = supabase
-        .from('rotina_execucoes')
+        .from('routine_executions')
         .select('*')
         .eq('user_id', user.id)
-        .order('data_execucao', { ascending: false });
+        .order('execution_date', { ascending: false });
 
       if (startDate) {
-        query = query.gte('data_execucao', startDate);
+        query = query.gte('execution_date', startDate);
       }
       if (endDate) {
-        query = query.lte('data_execucao', endDate);
+        query = query.lte('execution_date', endDate);
       }
 
       const { data, error } = await query;
@@ -99,12 +99,12 @@ export function useRoutines() {
   };
 
   // Criar nova rotina
-  const createRoutine = async (routineData: Omit<Routine, 'id' | 'user_id' | 'criado_em' | 'atualizado_em'>) => {
+  const createRoutine = async (routineData: Omit<Routine, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
       const { data, error } = await supabase
-        .from('rotinas')
+        .from('user_routines')
         .insert({
           ...routineData,
           user_id: user.id,
@@ -117,7 +117,7 @@ export function useRoutines() {
       setRoutines(prev => [data, ...prev]);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar rotina');
+      setError(err instanceof Error ? err.message : 'Erro ao criar routine');
       throw err;
     }
   };
@@ -128,7 +128,7 @@ export function useRoutines() {
 
     try {
       const { data, error } = await supabase
-        .from('rotinas')
+        .from('user_routines')
         .update(updates)
         .eq('id', routineId)
         .eq('user_id', user.id)
@@ -142,7 +142,7 @@ export function useRoutines() {
       ));
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar rotina');
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar routine');
       throw err;
     }
   };
@@ -153,8 +153,8 @@ export function useRoutines() {
 
     try {
       const { error } = await supabase
-        .from('rotinas')
-        .update({ ativa: false })
+        .from('user_routines')
+        .update({ is_active: false })
         .eq('id', routineId)
         .eq('user_id', user.id);
 
@@ -162,7 +162,7 @@ export function useRoutines() {
       
       setRoutines(prev => prev.filter(routine => routine.id !== routineId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao deletar rotina');
+      setError(err instanceof Error ? err.message : 'Erro ao deletar routine');
       throw err;
     }
   };
@@ -177,26 +177,26 @@ export function useRoutines() {
 
       // Verificar se já existe execução para hoje
       const { data: existingExecution } = await supabase
-        .from('rotina_execucoes')
+        .from('routine_executions')
         .select('id')
-        .eq('rotina_id', routineId)
+        .eq('routine_id', routineId)
         .eq('user_id', user.id)
-        .eq('data_execucao', today)
+        .eq('execution_date', today)
         .single();
 
       if (existingExecution) {
-        throw new Error('Rotina já foi iniciada hoje');
+        throw new Error('Routine já foi iniciada hoje');
       }
 
       const { data, error } = await supabase
-        .from('rotina_execucoes')
+        .from('routine_executions')
         .insert({
-          rotina_id: routineId,
+          routine_id: routineId,
           user_id: user.id,
-          data_execucao: today,
-          horario_inicio: now,
-          atividades_concluidas: [],
-          concluida: false,
+          execution_date: today,
+          start_time: now,
+          completed_activities: [],
+          is_completed: false,
         })
         .select()
         .single();
@@ -206,12 +206,12 @@ export function useRoutines() {
       setRoutineExecutions(prev => [data, ...prev]);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao iniciar rotina');
+      setError(err instanceof Error ? err.message : 'Erro ao iniciar routine');
       throw err;
     }
   };
 
-  // Atualizar execução de rotina
+  // Atualizar execução de routine
   const updateRoutineExecution = async (
     executionId: string, 
     updates: Partial<RoutineExecution>
@@ -220,7 +220,7 @@ export function useRoutines() {
 
     try {
       const { data, error } = await supabase
-        .from('rotina_execucoes')
+        .from('routine_executions')
         .update(updates)
         .eq('id', executionId)
         .eq('user_id', user.id)
@@ -246,21 +246,21 @@ export function useRoutines() {
     try {
       // Buscar execução atual
       const { data: execution, error: fetchError } = await supabase
-        .from('rotina_execucoes')
-        .select('atividades_concluidas')
+        .from('routine_executions')
+        .select('completed_activities')
         .eq('id', executionId)
         .eq('user_id', user.id)
         .single();
 
       if (fetchError) throw fetchError;
 
-      const completedActivities = execution.atividades_concluidas || [];
+      const completedActivities = execution.completed_activities || [];
       
       if (!completedActivities.includes(activityId)) {
         completedActivities.push(activityId);
         
         await updateRoutineExecution(executionId, {
-          atividades_concluidas: completedActivities
+          completed_activities: completedActivities
         });
       }
     } catch (err) {
@@ -269,11 +269,11 @@ export function useRoutines() {
     }
   };
 
-  // Finalizar execução de rotina
+  // Finalizar execução de routine
   const finishRoutineExecution = async (
     executionId: string, 
-    avaliacao?: number, 
-    observacoes?: string
+    rating?: number, 
+    notes?: string
   ) => {
     if (!user) throw new Error('Usuário não autenticado');
 
@@ -281,18 +281,18 @@ export function useRoutines() {
       const now = new Date().toTimeString().split(' ')[0];
       
       await updateRoutineExecution(executionId, {
-        horario_fim: now,
-        avaliacao,
-        observacoes,
-        concluida: true,
+        end_time: now,
+        rating,
+        notes,
+        is_completed: true,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao finalizar rotina');
+      setError(err instanceof Error ? err.message : 'Erro ao finalizar routine');
       throw err;
     }
   };
 
-  // Obter estatísticas de rotinas
+  // Obter estatísticas de routines
   const getRoutineStats = async (routineId: string, days: number = 30) => {
     if (!user) return null;
 
@@ -301,20 +301,20 @@ export function useRoutines() {
       startDate.setDate(startDate.getDate() - days);
       
       const { data, error } = await supabase
-        .from('rotina_execucoes')
+        .from('routine_executions')
         .select('*')
-        .eq('rotina_id', routineId)
+        .eq('routine_id', routineId)
         .eq('user_id', user.id)
-        .gte('data_execucao', startDate.toISOString().split('T')[0])
-        .order('data_execucao', { ascending: true });
+        .gte('execution_date', startDate.toISOString().split('T')[0])
+        .order('execution_date', { ascending: true });
 
       if (error) throw error;
 
       const totalDays = days;
       const executedDays = data?.length || 0;
-      const completedDays = data?.filter(execution => execution.concluida).length || 0;
-      const averageRating = data?.length ? 
-        data.reduce((sum, exec) => sum + (exec.avaliacao || 0), 0) / data.length : 0;
+      const completedDays = data?.filter(execution => execution.is_completed).length || 0;
+        const averageRating = data?.length ? 
+          data.reduce((sum, exec) => sum + (exec.rating || 0), 0) / data.length : 0;
       
       return {
         totalDays,
@@ -331,20 +331,20 @@ export function useRoutines() {
     }
   };
 
-  // Obter rotinas para hoje
+  // Obter routines para hoje
   const getTodayRoutines = () => {
     const today = new Date().getDay(); // 0 = domingo, 1 = segunda, etc.
     return routines.filter(routine => 
-      routine.ativa && routine.dias_semana.includes(today)
+      routine.is_active && routine.days_of_week.includes(today)
     );
   };
 
-  // Verificar se rotina foi executada hoje
+  // Verificar se routine foi executada hoje
   const isRoutineExecutedToday = (routineId: string) => {
     const today = new Date().toISOString().split('T')[0];
     return routineExecutions.some(execution => 
-      execution.rotina_id === routineId && 
-      execution.data_execucao === today
+      execution.routine_id === routineId && 
+      execution.execution_date === today
     );
   };
 

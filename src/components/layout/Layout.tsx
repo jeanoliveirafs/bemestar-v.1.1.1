@@ -26,7 +26,7 @@ export default function Layout({ children, currentPage, onPageChange, onLogout, 
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3 },
     { id: 'habits', name: 'Hábitos', icon: Award },
-    { id: 'routines', name: 'Rotinas', icon: Bell },
+    { id: 'routines', name: 'Routines', icon: Bell },
     { id: 'emotions', name: 'Emoções', icon: Users },
     { id: 'scales', name: 'Autoavaliações', icon: Brain },
     { id: 'ai-content', name: 'Conteúdo IA', icon: Sparkles },

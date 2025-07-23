@@ -109,8 +109,8 @@ const Habitos: React.FC<HabitosProps> = ({ onNavigate }) => {
   }, []);
 
   const carregarDados = () => {
-    const habitosSalvos = localStorage.getItem('habitos');
-    const registrosSalvos = localStorage.getItem('registros_habitos');
+    const habitosSalvos = localStorage.getItem('user_habits');
+    const registrosSalvos = localStorage.getItem('habit_completions');
     
     if (habitosSalvos) {
       setHabitos(JSON.parse(habitosSalvos));
@@ -189,12 +189,12 @@ const Habitos: React.FC<HabitosProps> = ({ onNavigate }) => {
   };
 
   const salvarHabitos = (novosHabitos: Habito[]) => {
-    localStorage.setItem('habitos', JSON.stringify(novosHabitos));
+    localStorage.setItem('user_habits', JSON.stringify(novosHabitos));
     setHabitos(novosHabitos);
   };
 
   const salvarRegistros = (novosRegistros: RegistroHabito[]) => {
-    localStorage.setItem('registros_habitos', JSON.stringify(novosRegistros));
+    localStorage.setItem('habit_completions', JSON.stringify(novosRegistros));
     setRegistros(novosRegistros);
   };
 

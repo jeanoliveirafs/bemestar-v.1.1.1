@@ -77,8 +77,8 @@ const ConteudoIA: React.FC<ConteudoIAProps> = ({ onNavigate }) => {
   }, []);
 
   const carregarDados = () => {
-    const mensagensSalvas = localStorage.getItem('historico_chat_ia');
-    const conteudosSalvos = localStorage.getItem('conteudos_ia_gerados');
+    const mensagensSalvas = localStorage.getItem('chat_history');
+    const conteudosSalvos = localStorage.getItem('ai_content_cache');
     
     if (mensagensSalvas) {
       setMensagens(JSON.parse(mensagensSalvas));
@@ -90,7 +90,7 @@ const ConteudoIA: React.FC<ConteudoIAProps> = ({ onNavigate }) => {
   };
 
   const inicializarConteudosExemplo = () => {
-    const conteudosSalvos = localStorage.getItem('conteudos_ia_gerados');
+    const conteudosSalvos = localStorage.getItem('ai_content_cache');
     if (!conteudosSalvos) {
       const conteudosExemplo: ConteudoGerado[] = [
         {
@@ -128,18 +128,18 @@ const ConteudoIA: React.FC<ConteudoIAProps> = ({ onNavigate }) => {
         }
       ];
       
-      localStorage.setItem('conteudos_ia_gerados', JSON.stringify(conteudosExemplo));
+      localStorage.setItem('ai_content_cache', JSON.stringify(conteudosExemplo));
       setConteudos(conteudosExemplo);
     }
   };
 
   const salvarMensagens = (novasMensagens: MensagemChat[]) => {
-    localStorage.setItem('historico_chat_ia', JSON.stringify(novasMensagens));
+    localStorage.setItem('chat_history', JSON.stringify(novasMensagens));
     setMensagens(novasMensagens);
   };
 
   const salvarConteudos = (novosConteudos: ConteudoGerado[]) => {
-    localStorage.setItem('conteudos_ia_gerados', JSON.stringify(novosConteudos));
+    localStorage.setItem('ai_content_cache', JSON.stringify(novosConteudos));
     setConteudos(novosConteudos);
   };
 
@@ -297,7 +297,7 @@ const ConteudoIA: React.FC<ConteudoIAProps> = ({ onNavigate }) => {
   const limparChat = () => {
     if (confirm('Tem certeza que deseja limpar todo o histórico do chat?')) {
       setMensagens([]);
-      localStorage.removeItem('historico_chat_ia');
+      localStorage.removeItem('chat_history');
     }
   };
 
