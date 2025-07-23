@@ -1,0 +1,239 @@
+-- =====================================================
+-- CONFIGURAÇÃO DE AUTENTICAÇÃO E TABELA DE USUÁRIOS
+-- Execute este script no SQL Editor do Supabase
+-- =====================================================
+
+-- Habilitar extensões necessárias
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- =====================================================
+-- TABELA DE PERFIS DE USUÁRIO
+-- =====================================================
+
+-- Criar tabela de perfis de usuário
+CREATE TABLE IF NOT EXISTS public.user_profiles (
+    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    full_name TEXT,
+    avatar_url TEXT,
+    phone TEXT,
+    date_of_birth DATE,
+    gender TEXT CHECK (gender IN ('masculino', 'feminino', 'outro', 'prefiro_nao_dizer')),
+    occupation TEXT,
+    emergency_contact_name TEXT,
+    emergency_contact_phone TEXT,
+    
+    -- Preferências de notificação
+    email_notifications BOOLEAN DEFAULT true,
+    push_notifications BOOLEAN DEFAULT true,
+    sms_notifications BOOLEAN DEFAULT false,
+    
+    -- Configurações de privacidade
+    profile_visibility TEXT DEFAULT 'private' CHECK (profile_visibility IN ('public', 'private', 'friends')),
+    
+    -- Metadados
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    last_login_at TIMESTAMP WITH TIME ZONE,
+    
+    -- Status da conta
+    is_active BOOLEAN DEFAULT true,
+    is_verified BOOLEAN DEFAULT false,
+    subscription_status TEXT DEFAULT 'free' CHECK (subscription_status IN ('free', 'premium', 'enterprise')),
+    subscription_expires_at TIMESTAMP WITH TIME ZONE
+);
+
+-- =====================================================
+-- ÍNDICES PARA PERFORMANCE
+-- =====================================================
+
+CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON public.user_profiles(email);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_created_at ON public.user_profiles(created_at);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_subscription ON public.user_profiles(subscription_status);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_active ON public.user_profiles(is_active);
+
+-- =====================================================
+-- FUNÇÃO PARA ATUALIZAR TIMESTAMP
+-- =====================================================
+
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =====================================================
+-- TRIGGERS
+-- =====================================================
+
+-- Trigger para atualizar updated_at automaticamente
+DROP TRIGGER IF EXISTS trigger_user_profiles_updated_at ON public.user_profiles;
+CREATE TRIGGER trigger_user_profiles_updated_at
+    BEFORE UPDATE ON public.user_profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_updated_at();
+
+-- =====================================================
+-- FUNÇÃO PARA CRIAR PERFIL AUTOMATICAMENTE
+-- =====================================================
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.user_profiles (id, email, full_name)
+    VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1))
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger para criar perfil quando usuário se registra
+DROP TRIGGER IF EXISTS trigger_create_user_profile ON auth.users;
+CREATE TRIGGER trigger_create_user_profile
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();
+
+-- =====================================================
+-- POLÍTICAS DE SEGURANÇA (RLS)
+-- =====================================================
+
+-- Habilitar RLS na tabela
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Política: Usuários podem ver apenas seu próprio perfil
+DROP POLICY IF EXISTS "Users can view own profile" ON public.user_profiles;
+CREATE POLICY "Users can view own profile"
+    ON public.user_profiles
+    FOR SELECT
+    USING (auth.uid() = id);
+
+-- Política: Usuários podem atualizar apenas seu próprio perfil
+DROP POLICY IF EXISTS "Users can update own profile" ON public.user_profiles;
+CREATE POLICY "Users can update own profile"
+    ON public.user_profiles
+    FOR UPDATE
+    USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
+
+-- Política: Usuários podem inserir apenas seu próprio perfil
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.user_profiles;
+CREATE POLICY "Users can insert own profile"
+    ON public.user_profiles
+    FOR INSERT
+    WITH CHECK (auth.uid() = id);
+
+-- Política: Usuários podem deletar apenas seu próprio perfil
+DROP POLICY IF EXISTS "Users can delete own profile" ON public.user_profiles;
+CREATE POLICY "Users can delete own profile"
+    ON public.user_profiles
+    FOR DELETE
+    USING (auth.uid() = id);
+
+-- =====================================================
+-- FUNÇÕES AUXILIARES
+-- =====================================================
+
+-- Função para obter perfil do usuário atual
+CREATE OR REPLACE FUNCTION public.get_current_user_profile()
+RETURNS public.user_profiles AS $$
+BEGIN
+    RETURN (
+        SELECT *
+        FROM public.user_profiles
+        WHERE id = auth.uid()
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Função para atualizar último login
+CREATE OR REPLACE FUNCTION public.update_last_login()
+RETURNS void AS $$
+BEGIN
+    UPDATE public.user_profiles
+    SET last_login_at = NOW()
+    WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Função para verificar se usuário é premium
+CREATE OR REPLACE FUNCTION public.is_user_premium()
+RETURNS boolean AS $$
+BEGIN
+    RETURN (
+        SELECT 
+            subscription_status IN ('premium', 'enterprise') 
+            AND (subscription_expires_at IS NULL OR subscription_expires_at > NOW())
+        FROM public.user_profiles
+        WHERE id = auth.uid()
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- =====================================================
+-- VERIFICAÇÃO FINAL
+-- =====================================================
+
+-- Verificar se a tabela foi criada corretamente
+SELECT 
+    table_name,
+    column_name,
+    data_type,
+    is_nullable
+FROM information_schema.columns 
+WHERE table_schema = 'public' 
+AND table_name = 'user_profiles'
+ORDER BY ordinal_position;
+
+-- Verificar políticas RLS
+SELECT 
+    schemaname,
+    tablename,
+    policyname,
+    permissive,
+    roles,
+    cmd,
+    qual
+FROM pg_policies 
+WHERE tablename = 'user_profiles';
+
+-- =====================================================
+-- INSTRUÇÕES DE USO
+-- =====================================================
+
+/*
+PARA EXECUTAR ESTA MIGRAÇÃO:
+
+1. Acesse o painel do Supabase (https://supabase.com/dashboard)
+2. Vá para seu projeto
+3. Clique em "SQL Editor" no menu lateral
+4. Cole todo este código SQL
+5. Clique em "Run" para executar
+
+APÓS A EXECUÇÃO:
+
+1. Verifique se a tabela user_profiles foi criada
+2. Teste o registro de um novo usuário
+3. Confirme que o perfil é criado automaticamente
+4. Verifique as políticas de segurança
+
+CONFIGURAÇÃO DE AUTENTICAÇÃO:
+
+1. Vá para Authentication > Settings
+2. Configure os provedores de autenticação desejados
+3. Defina as URLs de redirecionamento
+4. Configure as políticas de senha se necessário
+
+VARIÁVEIS DE AMBIENTE:
+
+- VITE_SUPABASE_URL: URL do seu projeto Supabase
+- VITE_SUPABASE_ANON_KEY: Chave anônima do Supabase
+
+Essas variáveis já estão configuradas no .env.example
+*/

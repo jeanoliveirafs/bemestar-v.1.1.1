@@ -98,7 +98,24 @@ O projeto já está otimizado para deploy no Vercel:
 - ✅ Configuração do Vercel (`vercel.json`) pronta
 - ✅ Scripts de build configurados
 
-### 2. Deploy Automático
+### 2. Configurar Supabase
+1. **Crie um projeto no Supabase**
+   - Acesse [supabase.com](https://supabase.com)
+   - Crie um novo projeto
+   - Anote a URL do projeto e a chave anônima
+
+2. **Execute a migração do banco**
+   - Acesse o SQL Editor no painel Supabase
+   - Execute o script: `backup/migrations/2025-01-27_fixed_production_schema.sql`
+   - Verifique se as tabelas foram criadas corretamente
+
+3. **Configure a autenticação**
+   - Vá para Authentication > Settings
+   - Habilite "Email" como provedor
+   - Configure Site URL: `https://seu-dominio.vercel.app`
+   - Adicione Redirect URLs se necessário
+
+### 3. Deploy Automático
 1. **Push para GitHub**: Faça commit e push do projeto
 2. **Import no Vercel**: 
    - Acesse [vercel.com](https://vercel.com)
@@ -110,12 +127,12 @@ O projeto já está otimizado para deploy no Vercel:
    - Build Command: `npm run build`
    - Output Directory: `dist`
 
-### 3. Configurar Variáveis de Ambiente
+### 4. Configurar Variáveis de Ambiente
 Após o import, configure as variáveis no painel do Vercel:
 
 **Settings > Environment Variables:**
 ```
-VITE_SUPABASE_URL=https://yeizisgimwwwvestmhnj.supabase.co
+VITE_SUPABASE_URL=[sua_url_supabase]
 VITE_SUPABASE_ANON_KEY=[sua_chave_anon]
 VITE_OPENAI_API_KEY=[sua_chave_openai]
 VITE_N8N_WEBHOOK_URL=[sua_url_webhook]
@@ -124,12 +141,18 @@ VITE_APP_ENV=production
 
 📋 **Consulte `VERCEL_ENV_SETUP.md` para os valores completos das variáveis**
 
-### 4. Configurar Banco de Dados
-1. Acesse o [Supabase SQL Editor](https://supabase.com/dashboard)
-2. Execute o script: `backup/migrations/2025-01-27_fixed_production_schema.sql`
-3. Verifique se as tabelas foram criadas corretamente
+### 5. Teste da Autenticação
+1. **Registre um novo usuário**
+   - Acesse a aplicação deployada
+   - Teste o registro de usuário
+   - Verifique se o perfil é criado automaticamente
 
-### 5. Deploy Final
+2. **Teste funcionalidades**
+   - Login/logout
+   - Criação de dados do usuário
+   - Acesso às diferentes seções
+
+### 6. Deploy Final
 - O Vercel fará deploy automático após configurar as variáveis
 - Acesse a URL fornecida pelo Vercel
 - ✅ Aplicação pronta para uso!
@@ -143,6 +166,10 @@ refugio-digital/
 ├── public/                 # Arquivos estáticos
 ├── src/
 │   ├── components/         # Componentes React
+│   │   ├── Auth/          # Componentes de autenticação
+│   │   │   ├── Login.tsx
+│   │   │   ├── Register.tsx
+│   │   │   └── AuthGuard.tsx
 │   │   ├── Painel.tsx     # Dashboard principal
 │   │   ├── Autoavaliacoes.tsx
 │   │   ├── Emergencia.tsx
@@ -152,13 +179,17 @@ refugio-digital/
 │   │   ├── ConteudoIA.tsx
 │   │   ├── Relatorios.tsx
 │   │   └── Mindfulness.tsx
+│   ├── hooks/             # Hooks customizados
+│   │   └── useAuth.ts     # Hook de autenticação
 │   ├── lib/               # Configurações e utilitários
 │   │   ├── supabaseClient.ts
 │   │   └── chatgptService.ts
 │   ├── App.tsx            # Componente principal
 │   └── main.tsx           # Ponto de entrada
-├── migrations/            # Scripts SQL do banco
-├── DEPLOY_GUIDE.md        # Guia de deploy
+├── backup/
+│   └── migrations/        # Scripts SQL do banco
+├── supabase_migration.sql # Script de migração principal
+├── VERCEL_ENV_SETUP.md    # Configuração de variáveis
 └── README.md              # Este arquivo
 ```
 

@@ -1,103 +1,138 @@
-import { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
+import { useState, useEffect, createContext, useContext } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 
+// Tipos para o perfil do usuário
 export interface UserProfile {
   id: string;
   email: string;
   full_name?: string;
-  date_of_birth?: string;
-  gender?: string;
+  avatar_url?: string;
   phone?: string;
+  date_of_birth?: string;
+  gender?: 'masculino' | 'feminino' | 'outro' | 'prefiro_nao_dizer';
+  occupation?: string;
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
-  avatar_url?: string;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  sms_notifications: boolean;
+  profile_visibility: 'public' | 'private' | 'friends';
   created_at: string;
   updated_at: string;
+  last_login_at?: string;
+  is_active: boolean;
+  is_verified: boolean;
+  subscription_status: 'free' | 'premium' | 'enterprise';
+  subscription_expires_at?: string;
 }
+
+interface AuthContextType {
+  user: User | null;
+  userProfile: UserProfile | null;
+  session: Session | null;
+  loading: boolean;
+  error: string | null;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  loadUserProfile: () => Promise<UserProfile | null>;
+  updateLastLogin: () => Promise<void>;
+  isPremium: () => Promise<boolean>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Verificar sessão atual
-    const getSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        if (session?.user) {
-          setUser(session.user);
-          await loadUserProfile(session.user.id);
-        }
-      } catch (err) {
-        console.error('Erro ao carregar sessão:', err);
-        setError(err instanceof Error ? err.message : 'Erro desconhecido');
-      } finally {
-        setLoading(false);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      // Carregar perfil se usuário estiver logado
+      if (session?.user) {
+        loadUserProfile();
+        updateLastLogin();
       }
-    };
-
-    getSession();
+      
+      setLoading(false);
+    });
 
     // Escutar mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await loadUserProfile(session.user.id);
-        } else {
-          setUserProfile(null);
-        }
-        
-        setLoading(false);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await loadUserProfile();
+        await updateLastLogin();
+      } else {
+        setUserProfile(null);
       }
-    );
+      
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const loadUserProfile = async (userId: string) => {
+  const loadUserProfile = async (): Promise<UserProfile | null> => {
     try {
+      if (!user) return null;
+      
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', user.id)
         .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-        throw error;
+      
+      if (error) {
+        console.error('Erro ao carregar perfil:', error);
+        return null;
       }
-
+      
       setUserProfile(data);
-    } catch (err) {
-      console.error('Erro ao carregar perfil:', err);
-      setError(err instanceof Error ? err.message : 'Erro ao carregar perfil');
+      return data;
+    } catch (error: any) {
+      console.error('Erro ao carregar perfil:', error);
+      return null;
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, fullName?: string) => {
     try {
       setLoading(true);
       setError(null);
-
-      const { data, error } = await supabase.auth.signUp({
+      
+      const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
       });
-
-      if (error) throw error;
-
-      // O perfil será criado automaticamente pelo trigger do banco de dados
-      return data;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao criar conta';
-      setError(errorMessage);
-      throw err;
+      
+      if (error) {
+        if (error.message.includes('User already registered')) {
+          throw new Error('Este email já está cadastrado');
+        }
+        throw error;
+      }
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -107,18 +142,21 @@ export function useAuth() {
     try {
       setLoading(true);
       setError(null);
-
-      const { data, error } = await supabase.auth.signInWithPassword({
+      
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao fazer login';
-      setError(errorMessage);
-      throw err;
+      
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Email ou senha incorretos');
+        }
+        throw error;
+      }
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -129,10 +167,12 @@ export function useAuth() {
       setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao sair';
-      setError(errorMessage);
-      throw err;
+      
+      // Limpar estado local
+      setUserProfile(null);
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -140,48 +180,70 @@ export function useAuth() {
 
 
 
-  const updateUserProfile = async (updates: Partial<UserProfile>) => {
+  const updateProfile = async (profileData: Partial<UserProfile>) => {
     try {
+      setLoading(true);
+      setError(null);
+      
       if (!user) throw new Error('Usuário não autenticado');
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
-
+      
+      const { error } = await supabase
+        .from('user_profiles')
+        .update(profileData)
+        .eq('id', user.id);
+      
       if (error) throw error;
       
-      setUserProfile(data);
-      return data;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar perfil';
-      setError(errorMessage);
-      throw err;
+      // Recarregar perfil após atualização
+      await loadUserProfile();
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const acceptTerms = async () => {
+  const updateLastLogin = async () => {
     try {
-      // Termos aceitos podem ser tratados de outra forma ou removidos
-      console.log('Termos aceitos');
-    } catch (err) {
-      console.error('Erro ao aceitar termos:', err);
-      throw err;
+      if (!user) return;
+      
+      await supabase.rpc('update_last_login');
+    } catch (error) {
+      console.error('Erro ao atualizar último login:', error);
+    }
+  };
+
+  const isPremium = async (): Promise<boolean> => {
+    try {
+      if (!user) return false;
+      
+      const { data, error } = await supabase.rpc('is_user_premium');
+      
+      if (error) {
+        console.error('Erro ao verificar status premium:', error);
+        return false;
+      }
+      
+      return data || false;
+    } catch (error) {
+      console.error('Erro ao verificar status premium:', error);
+      return false;
     }
   };
 
   return {
     user,
     userProfile,
+    session,
     loading,
     error,
-    signUp,
     signIn,
+    signUp,
     signOut,
-    updateUserProfile,
-    acceptTerms,
-    clearError: () => setError(null),
+    updateProfile,
+    loadUserProfile,
+    updateLastLogin,
+    isPremium,
   };
 }

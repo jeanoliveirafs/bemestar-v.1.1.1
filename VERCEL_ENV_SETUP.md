@@ -1,12 +1,24 @@
-# Configuração de Variáveis de Ambiente no Vercel
+## 📋 Configuração de Variáveis de Ambiente no Vercel
 
-Após importar o projeto no Vercel via GitHub, configure as seguintes variáveis de ambiente no painel do Vercel:
+### Pré-requisitos
+1. **Projeto Supabase configurado**
+   - Execute o script `supabase_migration.sql` no SQL Editor
+   - Configure a autenticação (Email/Password)
+   - Anote a URL e chave anônima do seu projeto
 
-## Variáveis Obrigatórias
+### Variáveis Necessárias
 
-### Supabase
-- `VITE_SUPABASE_URL`: https://yeizisgimwwwvestmhnj.supabase.co
-- `VITE_SUPABASE_ANON_KEY`: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllaXppc2dpbXd3d3Zlc3RtaG5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NjExMTUsImV4cCI6MjA2ODUzNzExNX0.GexbZxkm0BqPUlZ9cgH5j-hvzbgF-kx9mr3aiDTqVvA
+#### 🔐 Supabase (OBRIGATÓRIO)
+```
+VITE_SUPABASE_URL=[sua_url_do_projeto_supabase]
+VITE_SUPABASE_ANON_KEY=[sua_chave_anonima_supabase]
+```
+
+**Como obter:**
+1. Acesse [supabase.com/dashboard](https://supabase.com/dashboard)
+2. Selecione seu projeto
+3. Vá para Settings > API
+4. Copie a "Project URL" e "anon public" key
 
 ### OpenAI
 - `VITE_OPENAI_API_KEY`: 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
