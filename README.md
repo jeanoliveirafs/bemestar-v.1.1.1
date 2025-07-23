@@ -84,57 +84,57 @@ Uma aplicação completa para apoio à saúde mental, oferecendo ferramentas de 
 - **Vercel** - Deploy e hosting
 - **GitHub** - Controle de versão
 
-## 🚀 Instalação e Configuração
+## 🚀 Deploy no Vercel via GitHub
 
 ### Pré-requisitos
-- Node.js 18+
-- npm ou yarn
-- Conta no Supabase
-- Conta no Vercel (para deploy)
+- Conta no GitHub
+- Conta no Vercel
+- Conta no Supabase (banco de dados já configurado)
 
-### 1. Clone o Repositório
-```bash
-git clone https://github.com/seu-usuario/refugio-digital.git
-cd refugio-digital
+### 1. Preparação do Repositório
+O projeto já está otimizado para deploy no Vercel:
+- ✅ Arquivos desnecessários movidos para `/backup`
+- ✅ Variáveis sensíveis removidas do código
+- ✅ Configuração do Vercel (`vercel.json`) pronta
+- ✅ Scripts de build configurados
+
+### 2. Deploy Automático
+1. **Push para GitHub**: Faça commit e push do projeto
+2. **Import no Vercel**: 
+   - Acesse [vercel.com](https://vercel.com)
+   - Clique em "Import Project"
+   - Conecte seu repositório GitHub
+   - Selecione este projeto
+3. **Configuração Automática**: O Vercel detectará automaticamente:
+   - Framework: Vite
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+
+### 3. Configurar Variáveis de Ambiente
+Após o import, configure as variáveis no painel do Vercel:
+
+**Settings > Environment Variables:**
 ```
-
-### 2. Instale as Dependências
-```bash
-npm install
-```
-
-### 3. Configure as Variáveis de Ambiente
-As variáveis de ambiente são configuradas diretamente no Vercel para produção:
-
-```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://yeizisgimwwwvestmhnj.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# OpenAI
-VITE_OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# App
+VITE_SUPABASE_URL=https://yeizisgimwwwvestmhnj.supabase.co
+VITE_SUPABASE_ANON_KEY=[sua_chave_anon]
+VITE_OPENAI_API_KEY=[sua_chave_openai]
+VITE_N8N_WEBHOOK_URL=[sua_url_webhook]
 VITE_APP_ENV=production
 ```
 
-### 4. Configure o Banco de Dados
-1. Crie um projeto no [Supabase](https://supabase.com)
-2. Execute o script SQL em `migrations/2025-01-25_refugio_digital_complete_schema.sql`
-3. Configure a autenticação e URLs permitidas
+📋 **Consulte `VERCEL_ENV_SETUP.md` para os valores completos das variáveis**
 
-### 5. Deploy
-O projeto é executado diretamente em produção através do Vercel. Consulte o arquivo `DEPLOY_GUIDE.md` para instruções completas.
+### 4. Configurar Banco de Dados
+1. Acesse o [Supabase SQL Editor](https://supabase.com/dashboard)
+2. Execute o script: `backup/migrations/2025-01-27_fixed_production_schema.sql`
+3. Verifique se as tabelas foram criadas corretamente
 
-## 📦 Deploy
+### 5. Deploy Final
+- O Vercel fará deploy automático após configurar as variáveis
+- Acesse a URL fornecida pelo Vercel
+- ✅ Aplicação pronta para uso!
 
-Para instruções completas de deploy no Vercel, consulte o arquivo `DEPLOY_GUIDE.md`.
-
-### Deploy Rápido
-1. Faça push para o GitHub
-2. Conecte o repositório no Vercel
-3. Configure as variáveis de ambiente
-4. Deploy automático! 🚀
+## 📦 Estrutura Otimizada para Deploy
 
 ## 📁 Estrutura do Projeto
 
